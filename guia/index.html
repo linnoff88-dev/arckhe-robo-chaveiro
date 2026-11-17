@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robô Chaveiro — um robozinho de bolso que conversa com a criança, com os pais no controle</title>
+<meta name="description" content="Projeto aberto: uma placa ESP32-S3 de 1,54&quot; vira um chaveiro que conversa por voz com crianças. O cérebro fica no computador de casa ou, longe dele, num serviço de IA (OpenRouter, em desenho). Pais configuram nome, horários e limites pelo celular. Hoje é desenho; a placa está a caminho.">
+<meta property="og:title" content="Robô Chaveiro — um robozinho de bolso que conversa">
+<meta property="og:description" content="Seu filho leva no bolso um robozinho que conversa com ele, e você decide quando e sobre o quê.">
+<meta property="og:image" content="https://inematds.github.io/robo-chaveiro/guia/assets/banner.jpg">
+<link rel="alternate" hreflang="pt-BR" href="https://inematds.github.io/robo-chaveiro/guia/">
+<link rel="alternate" hreflang="en" href="https://inematds.github.io/robo-chaveiro/guia/en/">
+<link rel="alternate" hreflang="es" href="https://inematds.github.io/robo-chaveiro/guia/es/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0c10; --bg2:#14141b; --card:#16161e; --line:#272730;
+    --txt:#e9e9ee; --mut:#9a9aa6; --amb:#FACC15; --amb2:#f0c070; --sky:#38bdf8; --pro:#cbd5e1;
+    --ok:#7CE0C6; --warm:#F2B45C; --bad:#F0918A;
+    color-scheme:dark;
+  }
+  body.light{
+    --bg:#f6f7f9; --bg2:#eceef2; --card:#ffffff; --line:#e1e3ea;
+    --txt:#1a1a22; --mut:#5b5b68; --amb:#a16207; --amb2:#a16207; --sky:#0369a1; --pro:#b45309;
+    --ok:#0E6B55; --warm:#8F520A; --bad:#A83426;
+    color-scheme:light;
+  }
+  body.light .hero .glow{opacity:.5}
+  body.light pre{background:#0e0e14;color:#d6d6e0}
+  body.light pre .c{color:#8a8a98}
+  body.light pre .k{color:#f0c070}
+  body.light .btn{background:#FACC15}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.65 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:Sora,sans-serif;line-height:1.15;margin:0}
+  a{color:var(--amb);text-decoration:none}
+  code,pre{font-family:"JetBrains Mono",monospace}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 22px}
+  .mut{color:var(--mut)} .amb{color:var(--amb)}
+  .chip{display:inline-block;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--amb);font-weight:600;font-family:Sora}
+  nav{position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);background:rgba(12,12,16,.78);border-bottom:1px solid var(--line)}
+  body.light nav{background:rgba(246,247,249,.85)}
+  nav .wrap{display:flex;align-items:center;gap:22px;height:60px}
+  nav .brand{display:flex;align-items:center;gap:8px;font-family:Sora;font-weight:800;letter-spacing:-.02em;color:var(--amb)}
+  nav .brand .emoji{font-size:1.25rem}
+  nav .sep{color:var(--mut);opacity:.45}
+  nav .inema{color:var(--sky);font-weight:600;font-size:.88rem;font-family:Sora}
+  nav .inema:hover{filter:brightness(1.15)}
+  nav .pro{color:var(--pro);font-weight:600;font-size:.88rem;font-family:Sora}
+  nav .pro:hover{filter:brightness(1.15)}
+  nav .clubpro{display:inline-flex;align-items:center;gap:6px}
+  nav .links{margin-left:auto;display:flex;align-items:center;gap:20px;font-size:.92rem}
+  nav .links a.sec{color:var(--mut)} nav .links a.sec:hover{color:var(--txt)}
+  .lang{display:inline-flex;gap:2px;font-family:Sora;font-size:.78rem}
+  .lang a{color:var(--mut);padding:.2em .45em;border-radius:6px} .lang a.on{color:var(--amb);background:rgba(250,204,21,.12)}
+  .tgl{background:var(--bg2);border:1px solid var(--line);color:var(--txt);width:38px;height:38px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:1.05rem}
+  .tgl:hover{border-color:var(--amb)}
+  .btn{display:inline-block;background:var(--amb);color:#1a1206;font-weight:600;padding:.6em 1.05em;border-radius:10px;font-family:Sora}
+  .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+  @media(max-width:900px){nav .links a.sec{display:none}}
+  @media(max-width:520px){nav .wrap{gap:8px;padding:8px 14px;height:auto;flex-wrap:wrap} nav .links{gap:8px;margin-left:0;width:100%;justify-content:space-between} nav .btn{padding:.45em .7em;font-size:.82rem} .tgl{width:34px;height:34px}}
+  .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+  .hero .glow{position:absolute;inset:-40% -20% auto auto;width:70%;height:600px;background:radial-gradient(closest-side,rgba(250,204,21,.16),transparent 70%);pointer-events:none}
+  .hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding:74px 22px}
+  .hero h1{font-size:clamp(2.1rem,4.6vw,3.3rem);font-weight:800;letter-spacing:-.025em}
+  .hero p.lead{font-size:1.15rem;color:var(--mut);margin:1.1em 0 1.6em;max-width:44ch}
+  .hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+  .hero figure{margin:0;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 80px -30px #000}
+  .hero figure img{width:100%;height:auto;display:block}
+  .resumo{padding:38px 0 34px;border-bottom:1px solid var(--line)}
+  .resumo p{font-size:1.12rem;line-height:1.7;max-width:74ch;margin:.55em 0 0}
+  .resumo figure{margin:28px 0 0;border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+  .resumo figure img{width:100%;display:block}
+  @media(max-width:780px){.hero .wrap{grid-template-columns:1fr;padding:48px 22px}}
+  section{padding:62px 0;border-bottom:1px solid var(--line)}
+  section h2{font-size:clamp(1.5rem,3.4vw,2.1rem);font-weight:800;letter-spacing:-.02em}
+  section .sub{color:var(--mut);margin:.6em 0 2em;max-width:66ch}
+  .grid{display:grid;gap:16px}
+  .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:820px){.g3,.g4{grid-template-columns:1fr 1fr}}
+  @media(max-width:540px){.g2,.g3,.g4{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .card h3{font-size:1.05rem;margin-bottom:.4em}
+  .card p{color:var(--mut);font-size:.95rem;margin:0}
+  .card p+p{margin-top:.6em}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+  .flow span{background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:.45em .9em;font-size:.85rem;font-family:Sora;font-weight:600}
+  .techzone .flow span{background:var(--card)}
+  .flow .arr{color:var(--amb);border:none;background:none !important;padding:0 .1em}
+  pre{background:#0a0a0e;border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow:auto;font-size:.86rem;line-height:1.6;color:#d6d6e0}
+  pre .c{color:#6f6f7c} pre .k{color:var(--amb2)} pre .s{color:#9ece6a}
+  .step{display:grid;grid-template-columns:46px minmax(0,1fr);gap:16px;margin-bottom:26px}
+  .step>div,.card{min-width:0}
+  p code,li code,td code{overflow-wrap:anywhere;font-size:.88em}
+  .step .b{width:46px;height:46px;border-radius:12px;background:#FACC15;color:#1a1206;font-family:Sora;font-weight:800;font-size:1.25rem;display:flex;align-items:center;justify-content:center}
+  .step h3{font-size:1.12rem;margin-bottom:.3em}
+  .step p{color:var(--mut);margin:.2em 0 .7em}
+  .phase{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--line)}
+  .phase:last-child{border:none}
+  .phase .tag{flex:0 0 92px;font-family:Sora;font-weight:800;color:var(--amb)}
+  .phase .d strong{display:block;margin-bottom:.2em}
+  .phase .d span{color:var(--mut);font-size:.95rem}
+  .st{display:inline-block;font-family:Sora;font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:.2em .6em;border-radius:999px;border:1px solid currentColor;margin-bottom:.6em}
+  .st.ok{color:var(--ok)} .st.meio{color:var(--warm)} .st.papel{color:var(--mut)}
+  .tbl{width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+  table{border-collapse:collapse;width:100%;font-size:.93rem;min-width:520px}
+  th,td{text-align:left;padding:.7em .9em;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:Sora;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);background:var(--bg2)}
+  .techzone th{background:var(--card)}
+  tr:last-child td{border-bottom:none}
+  .big{font-family:Sora;font-weight:800;font-size:2rem;color:var(--amb);line-height:1}
+  .nota{border-left:3px solid var(--amb);padding:.8em 1em;background:var(--card);border-radius:0 12px 12px 0;color:var(--txt);max-width:74ch;margin-top:1.6em}
+  .techhead{background:var(--bg2);border-top:3px solid var(--amb);padding:58px 0 8px}
+  .techhead h2{font-family:Sora;font-size:clamp(1.5rem,3.4vw,2.1rem);font-weight:800;margin:.3em 0 0}
+  .techhead .sub{color:var(--mut);margin:.6em 0 1em;max-width:66ch}
+  .techzone{background:var(--bg2)}
+  footer{padding:46px 0;text-align:center;color:var(--mut);font-size:.9rem}
+  .pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:.3em .8em;font-size:.78rem;color:var(--mut);margin:4px}
+  .poderes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0 6px}
+  .poderes div{border:1px solid var(--amb);border-radius:12px;padding:10px 12px;background:rgba(250,204,21,.07)}
+  .poderes b{display:block;font-family:Sora;font-size:1.15rem;color:var(--amb);letter-spacing:-.01em}
+  .poderes span{font-size:.82rem;color:var(--mut);line-height:1.35}
+  @media (max-width:640px){.poderes{grid-template-columns:repeat(2,1fr)}}
+  .card figcaption{font-size:.85rem;color:var(--mut);margin-top:8px}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="brand" href="#top"><span class="emoji">🔑</span> Robô Chaveiro</a>
+  <span class="sep">|</span>
+  <span class="clubpro">
+    <a class="inema" href="https://inema.club" target="_blank" rel="noopener">INEMA.CLUB</a>
+    <span class="sep">-</span>
+    <a class="pro" href="https://inema.pro" target="_blank" rel="noopener">PRO</a>
+  </span>
+  <div class="links">
+    <a class="sec" href="#ideia">A ideia</a>
+    <a class="sec" href="#hoje">Hoje</a>
+    <a class="sec" href="#cerebros">Cérebros</a>
+    <a class="sec" href="#pais">Pais</a>
+    <a class="sec" href="#corpos">Corpos</a>
+    <a class="sec" href="#tecnico">Kit (técnico)</a>
+    <span class="lang"><a class="on" href="./">PT</a><a href="en/">EN</a><a href="es/">ES</a></span>
+    <button class="tgl" id="themeToggle" aria-label="Alternar tema" title="Alternar tema">🌙</button>
+    <a class="btn" href="https://github.com/inematds/robo-chaveiro" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</div></nav>
+
+<header class="hero" id="top">
+  <div class="glow"></div>
+  <div class="wrap">
+    <div>
+      <span class="chip">Robô de bolso · projeto aberto</span>
+      <h1>Seu filho leva no bolso um robozinho que conversa com ele, e <span class="amb">você decide</span> quando e sobre o quê</h1>
+      <p class="lead">Você quer que a criança converse com uma IA sem entregar o celular na mão dela, e sem perder o controle do que ela ouve. O <strong>Robô Chaveiro</strong> é uma plaquinha de R$ 132 (sem frete) com tela e voz, do tamanho de um chaveiro, que responde falando. O desenho prevê que os pais escolham o nome, a voz, os horários e o tempo por dia. Hoje é só projeto: a placa ainda não chegou.</p>
+      <div class="cta">
+        <a class="btn" href="#video">Entender em 2 minutos</a>
+        <a class="btn ghost" href="https://github.com/inematds/robo-chaveiro" target="_blank" rel="noopener">Ver no GitHub</a>
+      </div>
+    </div>
+    <figure><img src="assets/banner.jpg" alt="Banner: Robô de chaveiro. Conversa por voz com a criança, com os pais no controle"><figcaption style="padding:10px 14px;font-size:.85rem;color:var(--mut);background:var(--card)">Arte ilustrativa. A placa ainda não chegou: nada foi gravado nela.</figcaption></figure>
+  </div>
+</header>
+
+<section id="resumo" class="resumo"><div class="wrap">
+  <span class="chip">Em resumo</span>
+  <p>Este é um projeto aberto para transformar uma plaquinha com tela de 1,54" numa espécie de bichinho de bolso que conversa por voz: a criança segura um botão, fala, e ele responde em voz alta, com um rosto de olhos grandes na tela. Ele "pensa" de um de três jeitos: pelo computador de casa, direto num serviço de IA na internet (OpenRouter), ou pelo computador de casa repassando para esse serviço. Os pais vão configurar tudo pelo celular. Hoje existe o projeto no papel e o servidor de casa, que já funciona num projeto irmão; a placa e o programa dela ainda não.</p>
+  <figure><img src="assets/banner-grade.jpg" alt="Banner com seis cartões: conversa por voz, servidor de casa ou API, aviso de bateria, painel dos pais, corpos de bicho, projeto aberto" loading="lazy"><figcaption style="padding:10px 14px;font-size:.85rem;color:var(--mut);background:var(--card)">Arte ilustrativa: o bonequinho metálico é enfeite. O chaveiro de verdade é a plaquinha quadrada verde, com a tela de rosto, da imagem de cima.</figcaption></figure>
+</div></section>
+
+<section id="video"><div class="wrap">
+  <span class="chip">Vídeo</span>
+  <h2>Entenda em 2 minutos</h2>
+  <p class="sub">O corpo de R$ 132, onde a IA mora e o que os pais vão poder decidir pelo celular.</p>
+  <div style="aspect-ratio:16/9;border-radius:14px;overflow:hidden;border:1px solid var(--line)"><iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/735cjrp4KiM" title="Vídeo: Robô chaveiro" style="width:100%;height:100%;border:0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+  <p class="mut" style="margin-top:12px"><a href="https://www.youtube.com/watch?v=735cjrp4KiM" target="_blank" rel="noopener">▶ Assistir no YouTube</a> · <a href="https://youtube.com/shorts/sbQqWAy1ByE" target="_blank" rel="noopener">Versão vertical (celular)</a></p>
+</div></section>
+
+<section id="ideia"><div class="wrap">
+  <span class="chip">A ideia</span>
+  <h2>Um rosto no bolso, o cérebro em outro lugar</h2>
+  <p class="sub">Uma plaquinha de chaveiro não entende fala nem pensa a resposta sozinha: isso pede modelos grandes. Então ela é só o corpo: ouve, mostra o rosto e fala. O pensamento acontece fora dela.</p>
+  <div class="grid g3">
+    <div class="card"><h3>🔑 O corpo, no bolso</h3><p>Uma placa SpotPear com tela de 1,54", microfone, alto-falante, dois botões e capinha com furo para pendurar. A criança segura o botão, fala até 15 segundos e solta. Não tem câmera.</p></div>
+    <div class="card"><h3>🧠 O cérebro, em casa ou na internet</h3><p>Em casa, um programa no computador transforma a fala em texto, pede a resposta a uma IA (o Claude, pago por mensalidade, não por pergunta) e gera a voz ali mesmo. Longe de casa, o desenho prevê um serviço de IA pela internet (OpenRouter), que ainda não foi autorizado nem testado.</p></div>
+    <div class="card"><h3>🔋 Avisa antes de apagar</h3><p>Foi pensado para andar na bateria (se a versão de chaveiro vem com bateria, e de quanto, ainda não foi conferido). O desenho: quando ela for acabando, ele mostra olhos de sono, depois pede "me coloca para carregar" e, no fim, diz tchau e dorme. As frases ficam gravadas nele, para o aviso funcionar mesmo sem internet.</p></div>
+  </div>
+  <p class="nota"><strong>Seguro por desenho:</strong> argola ou mosquetão, nunca cordão no pescoço da criança sem fecho que se solta. Nenhuma peça pequena que saia. É regra do projeto que o robô não vai pedir nome completo, endereço nem escola. E, no servidor de casa, a IA roda sem nenhuma ferramenta: só escreve texto, não mexe em nada no computador.</p>
+</div></section>
+
+<section id="hoje"><div class="wrap">
+  <span class="chip">O que existe hoje</span>
+  <h2>O que está pronto e o que é só desenho</h2>
+  <p class="sub">Situação em 15/11/2026. Sem promessa: só o que foi feito.</p>
+  <div class="grid g3">
+    <div class="card"><span class="st ok">✓ Pronto (no projeto irmão)</span><h3>O servidor de casa</h3><p>O cérebro de casa é o do <a href="https://inematds.github.io/robo-cores3-lite/guia/" target="_blank" rel="noopener">Robô CoreS3 Lite</a>, já testado com gravações: até o primeiro som da resposta, de 6,8 a 7,6 s medidos, com os modelos carregados. O chaveiro vai usar esse mesmo servidor.</p></div>
+    <div class="card"><span class="st meio">◐ Comprada, a caminho</span><h3>A placa</h3><p>SpotPear ESP32-S3 1,54", provavelmente o modelo "muma", comprada por R$ 132,14 em 15/11/2026. O modelo exato, a bateria e os pinos do som só serão confirmados com ela na mão.</p></div>
+    <div class="card"><span class="st papel">○ Só no papel</span><h3>Programa da placa, painel e aviso de bateria</h3><p>O programa da placa, o painel dos pais, o aviso de bateria e o caminho pela internet estão desenhados, com critério de pronto para cada um. Nada disso foi escrito ainda.</p></div>
+  </div>
+  <p class="nota"><strong>Fábrica sem nuvem estranha:</strong> a placa vem com um programa de fábrica que manda a voz para um serviço de terceiros (XiaoZhi). Ele não será ativado: a voz de crianças não vai para fora sem decisão dos pais. O programa de fábrica pode voltar depois pelos arquivos da própria SpotPear.</p>
+</div></section>
+
+<section id="cerebros"><div class="wrap">
+  <span class="chip">Três cérebros</span>
+  <h2>Em casa, direto na internet, ou os dois juntos</h2>
+  <p class="sub">O mesmo chaveiro pode usar qualquer um. Só o servidor de casa existe hoje; os outros dois só entram com a autorização do dono do projeto para usar o serviço pago.</p>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>Pelo computador de casa</th><th>Direto pela internet (OpenRouter)</th><th>Casa repassa à internet</th></tr></thead>
+    <tbody>
+      <tr><td>Onde funciona</td><td>no Wi-Fi de casa, com o computador ligado</td><td>em qualquer Wi-Fi, inclusive o do celular</td><td>onde o chaveiro alcançar o computador</td></tr>
+      <tr><td>Demora</td><td>6,8 a 7,6 s até o primeiro som, medido no projeto irmão</td><td>não medida</td><td>não medida</td></tr>
+      <tr><td>Custo</td><td>só a mensalidade do Claude e o PC ligado</td><td>pago por uso, com teto por dia</td><td>pago por uso</td></tr>
+      <tr><td>Senha do serviço pago guardada no chaveiro</td><td>nenhuma</td><td>uma só dele, com teto de gasto por dia; perdeu o chaveiro, é só desativar</td><td>nenhuma</td></tr>
+      <tr><td>Voz</td><td>gerada no computador de casa</td><td>a do serviço</td><td>a de casa ou a do serviço</td></tr>
+      <tr><td>Situação</td><td>existe (projeto irmão)</td><td colspan="2">só desenho, nenhuma chamada feita</td></tr>
+    </tbody>
+  </table></div>
+  <p class="nota">Pela <a href="https://openrouter.ai/docs/guides/overview/multimodal/audio" target="_blank" rel="noopener">documentação do OpenRouter</a>, um turno inteiro cabe num único pedido: a gravação vai, e a resposta volta em pedaços de áudio e texto, que o chaveiro toca enquanto chegam. Quais modelos de voz estão lá hoje e quanto custam ainda não foi conferido.</p>
+</div></section>
+
+<section id="pais"><div class="wrap">
+  <span class="chip">Pais no controle</span>
+  <h2>Você vai configurar pelo celular, e a criança vai saber que você vê</h2>
+  <p class="sub"><span class="st papel">○ Só no papel</span> Desenho de duas telas: a primeira configuração no próprio chaveiro e um painel da família no computador de casa, que abre no celular.</p>
+  <div class="grid g3">
+    <div class="card"><h3>🏷️ Dar nome e jeito</h3><p>Nome do chaveiro, apelido da criança (nunca o nome completo), faixa de idade, personalidade (brincalhão, calmo, curioso, professor), voz, cor dos olhos e volume máximo.</p></div>
+    <div class="card"><h3>⏰ Limitar</h3><p>Horários permitidos (fora deles: "agora é hora de descansar"), minutos por dia, botão "pausar agora", assuntos que os pais não querem e teto de gasto por dia quando usar o OpenRouter.</p></div>
+    <div class="card"><h3>👀 Acompanhar</h3><p>Histórico só em texto, com hora, e um resumo do dia. Guardado por nada, 1, 7 ou 30 dias, e apagado sozinho. Áudio desligado por padrão. Mais o nível da bateria e o último contato.</p></div>
+  </div>
+  <p class="nota"><strong>Sem acompanhar escondido:</strong> o chaveiro vai dizer à criança que os pais podem ver o que eles conversam. <strong>Sem localização:</strong> a placa não tem GPS e o painel não vai tentar descobrir onde ela está. Os dados ficam no computador da família; usando o OpenRouter, o texto também passa pelo serviço, e o painel vai avisar isso.</p>
+</div></section>
+
+<section id="corpos"><div class="wrap">
+  <span class="chip">Ideia para depois</span>
+  <h2>Corpos de bicho e boneco, com o chaveiro como rosto</h2>
+  <p class="sub">O chaveiro encaixa num corpo e a tela vira a cara do personagem. As imagens são propostas desenhadas por IA (Codex), não produtos feitos. Fica para uma fase futura.</p>
+  <div class="grid g4">
+    <figure class="card" style="margin:0;padding:10px"><img src="assets/corpos/01-capi-bolso.jpg" alt="Capivara de pelúcia com o chaveiro como rosto" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Capi-Bolso</strong> · capivara de pelúcia</figcaption></figure>
+    <figure class="card" style="margin:0;padding:10px"><img src="assets/corpos/02-tatu-casca.jpg" alt="Tatu com casca em gomos e o chaveiro como rosto" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Tatu-Casca</strong> · tatu de gomos</figcaption></figure>
+    <figure class="card" style="margin:0;padding:10px"><img src="assets/corpos/03-perereca-pingo.jpg" alt="Perereca de silicone com o chaveiro como rosto" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Perereca Pingo</strong> · silicone</figcaption></figure>
+    <figure class="card" style="margin:0;padding:10px"><img src="assets/corpos/04-arara-asa.jpg" alt="Arara de crochê com o chaveiro como rosto" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Arara Asa</strong> · crochê</figcaption></figure>
+    <figure class="card" style="margin:0;padding:10px"><img src="assets/corpos/05-nuvim.jpg" alt="Nuvem fofa de pelúcia com o chaveiro como rosto" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Nuvim</strong> · nuvem macia, 3–6 anos</figcaption></figure>
+    <figure class="card" style="margin:0;padding:10px"><img src="assets/corpos/06-trilho.jpg" alt="Bonequinho de capuz com o chaveiro como rosto" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Trilho</strong> · boneco de capuz</figcaption></figure>
+    <figure class="card" style="margin:0;padding:10px"><img src="assets/corpos/07-orbe-robo.jpg" alt="Robozinho de mesa impresso com o chaveiro como rosto" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Orbe Robô</strong> · berço impresso</figcaption></figure>
+    <figure class="card" style="margin:0;padding:10px"><img src="assets/corpos/08-ipe-miudo.jpg" alt="Arvorezinha de madeira e feltro com o chaveiro como rosto" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Ipê Miúdo</strong> · madeira e feltro</figcaption></figure>
+  </div>
+  <p class="nota">Regras comuns: sem ímã, sem olho de plástico ou peça que solte, alto-falante e microfone com saída livre, botões e entrada de carga acessíveis, e o chaveiro sai do corpo para carregar. As propostas, com a pesquisa e os links, estão em <a href="https://github.com/inematds/robo-chaveiro/blob/main/ideias/corpos/PROPOSTAS.md" target="_blank" rel="noopener">ideias/corpos/PROPOSTAS.md</a>.</p>
+</div></section>
+
+<div id="tecnico" class="techhead"><div class="wrap">
+  <span class="chip">Parte técnica</span>
+  <h2>O kit: <span class="amb">para quem quer montar o seu</span></h2>
+  <p class="sub">Daqui para baixo é a parte técnica: a placa, o protocolo, os comandos e as fases. Você <strong>não precisa</strong> desta parte para entender o que está acima.</p>
+</div></div>
+
+<div class="techzone">
+
+<section id="oque"><div class="wrap">
+  <span class="chip">O que é</span>
+  <h2>A placa, o servidor reaproveitado e os documentos</h2>
+  <p class="sub">Tudo no repositório, em português: definição, plano por fases com critério de pronto e as ideias de corpo.</p>
+  <div class="grid g3">
+    <div class="card"><h3>🟩 SpotPear ESP32-S3 1,54" (provável "muma")</h3><p>ESP32-S3 com Wi-Fi 2,4 GHz, 16 MB de flash e 8 MB de PSRAM; tela de 240 × 240 (ST7789), toque só na versão "Touch"; microfone e alto-falante; botões liga e BOOT; carga por USB-C. Sem câmera. Dados da ficha e da wiki da SpotPear, ainda não conferidos na placa.</p></div>
+    <div class="card"><h3>🖥️ Servidor do projeto irmão</h3><p>O <a href="https://github.com/inematds/robo-cores3-lite" target="_blank" rel="noopener">robo-cores3-lite</a>, porta 8770, usado como está, com o cabeçalho <code>X-Robo-Id: chaveiro-1</code>. Este projeto não copia o código dele.</p></div>
+    <div class="card"><h3>📄 Desenho completo</h3><p>A <a href="https://github.com/inematds/robo-chaveiro/blob/main/DEFINICAO.md" target="_blank" rel="noopener">DEFINICAO.md</a> traz a placa (seção 2), os três cérebros (4), fora de casa (5), bateria (7), crianças (9), painel dos pais (13) e corpos (14).</p></div>
+  </div>
+</div></section>
+
+<section id="fluxo"><div class="wrap">
+  <span class="chip">Como funciona</span>
+  <h2>Um turno de conversa pelo servidor de casa</h2>
+  <p class="sub">Conversa meio a meio: ou ouve, ou fala. Igual ao projeto irmão, sem a foto.</p>
+  <div class="flow">
+    <span>Segura o BOOT</span><span class="arr">→</span>
+    <span>/v1/aquecer</span><span class="arr">→</span>
+    <span>Grava até 15 s</span><span class="arr">→</span>
+    <span>/v1/conversa</span><span class="arr">→</span>
+    <span>Whisper</span><span class="arr">→</span>
+    <span>Claude (claude -p) sem ferramentas</span><span class="arr">→</span>
+    <span>Chatterbox</span><span class="arr">→</span>
+    <span>Toca e mostra o rosto</span>
+  </div>
+  <p class="nota">Estados do rosto: pronto, ouvindo, pensando, falando; erro por 2 s e volta a pronto, sem reiniciar. No caminho pelo OpenRouter, o turno vira um pedido HTTPS com a gravação, e a resposta chega em pedaços de áudio (streaming).</p>
+</div></section>
+
+<section id="pre"><div class="wrap">
+  <span class="chip">Pré-requisitos</span>
+  <h2>O que precisa ter</h2>
+  <p class="sub">Para o cérebro de casa, os mesmos pré-requisitos do projeto irmão (Linux com placa de vídeo NVIDIA, inemavox, assinatura do Claude). Estão explicados no <a href="https://inematds.github.io/robo-cores3-lite/guia/#pre" target="_blank" rel="noopener">guia do Robô CoreS3 Lite</a>.</p>
+  <div class="grid g2">
+    <div class="card"><h3>A placa</h3><p>SpotPear ESP32-S3 1,54" com capinha. Na primeira vez, ligar sem configurar o Wi-Fi do programa de fábrica.</p></div>
+    <div class="card"><h3>arduino-cli</h3><p>A ferramenta de linha de comando do Arduino, com o pacote <code>esp32:esp32</code>. Qual placa escolher no compilador ainda será definido com a placa na mão.</p><pre><span class="k">arduino-cli</span> version</pre></div>
+  </div>
+</div></section>
+
+<section id="guia"><div class="wrap">
+  <span class="chip">Guia de uso · passo a passo</span>
+  <h2>O que dá para fazer hoje</h2>
+  <p class="sub">Os passos 1 a 3 funcionam hoje, sem a placa. O passo 4 é o primeiro com ela. O programa da placa ainda não existe.</p>
+
+  <div class="step"><div class="b">1</div><div>
+    <h3>Baixar os dois projetos</h3>
+    <p>Este, com o desenho, e o irmão, com o servidor.</p>
+<pre><span class="k">git clone</span> <span class="s">https://github.com/inematds/robo-chaveiro</span>
+<span class="k">git clone</span> <span class="s">https://github.com/inematds/robo-cores3-lite</span></pre>
+  </div></div>
+
+  <div class="step"><div class="b">2</div><div>
+    <h3>Subir o servidor de casa</h3>
+    <p>Crie a configuração: troque <code>ROBO_TOKEN</code> por um texto longo e aponte <code>VOZ_REF</code> para um WAV curto com a voz que o robô vai imitar. Os pré-requisitos (inemavox, ambiente Python, Claude Code) estão no <a href="https://inematds.github.io/robo-cores3-lite/guia/#pre" target="_blank" rel="noopener">guia do projeto irmão</a>. Depois suba o servidor na porta 8770.</p>
+<pre><span class="k">cd</span> robo-cores3-lite
+<span class="k">cp</span> servidor/env.exemplo servidor/.env
+<span class="k">nano</span> servidor/.env   <span class="c"># ROBO_TOKEN e VOZ_REF</span>
+<span class="k">python3</span> servidor/servidor.py</pre>
+  </div></div>
+
+  <div class="step"><div class="b">3</div><div>
+    <h3>Testar o cérebro com uma gravação</h3>
+    <p>Noutro terminal, na mesma pasta do passo 1, mande a gravação de teste. É o mesmo pedido que o chaveiro vai fazer.</p>
+<pre><span class="k">cd</span> robo-cores3-lite
+<span class="k">python3</span> servidor/testar.py servidor/teste/pergunta.wav</pre>
+  </div></div>
+
+  <div class="step"><div class="b">4</div><div>
+    <h3>Quando a placa chegar: ver se ela aparece</h3>
+    <p>Ligue pelo cabo USB-C, sem ativar o programa de fábrica na nuvem. Uma porta nova deve aparecer.</p>
+<pre><span class="k">arduino-cli</span> board list</pre>
+  </div></div>
+</div></section>
+
+<section id="roadmap"><div class="wrap">
+  <span class="chip">Roadmap</span>
+  <h2>As fases, cada uma com critério de pronto</h2>
+  <p class="sub">O plano completo, com o comando ou a medida que confere cada critério, está no <a href="https://github.com/inematds/robo-chaveiro/blob/main/PLANO.md" target="_blank" rel="noopener">PLANO.md</a>.</p>
+  <div class="phase"><div class="tag">F0</div><div class="d"><strong>A placa chega e liga</strong><span>Em andamento: comprada em 15/11/2026, ainda a caminho.</span></div></div>
+  <div class="phase"><div class="tag">F1</div><div class="d"><strong>Grava e envia ao servidor</strong><span>Achar no esquema os pinos do som e da bateria; segurar o BOOT para falar.</span></div></div>
+  <div class="phase"><div class="tag">F2</div><div class="d"><strong>Toca a resposta</strong><span>Cinco perguntas seguidas, rosto de erro sem reiniciar, autonomia da bateria medida.</span></div></div>
+  <div class="phase"><div class="tag">F2b</div><div class="d"><strong>Aviso de bateria</strong><span>Três degraus calibrados pela descarga medida; funciona sem internet.</span></div></div>
+  <div class="phase"><div class="tag">F2c</div><div class="d"><strong>Configuração e painel dos pais</strong><span>Nome, horários, minutos por dia, pausar, histórico em texto. O painel pode começar antes da placa.</span></div></div>
+  <div class="phase"><div class="tag">F3</div><div class="d"><strong>Chaveiro de verdade</strong><span>Argola, capinha, persona de criança testada com 10 perguntas.</span></div></div>
+  <div class="phase"><div class="tag">F3b</div><div class="d"><strong>Cérebro pela internet (OpenRouter)</strong><span>Só depois da autorização do serviço e da finalidade.</span></div></div>
+  <div class="phase"><div class="tag">F4</div><div class="d"><strong>Opcionais</strong><span>Corpos de bicho, troca automática de cérebro, frases de espera, palavra de ativação.</span></div></div>
+</div></section>
+
+</div><!-- /techzone -->
+
+<footer>
+  <div class="wrap">
+    <div class="pill">SpotPear ESP32-S3 1,54"</div><div class="pill">ESP32-S3 · Arduino</div><div class="pill">servidor robo-cores3-lite</div><div class="pill">claude -p (assinatura)</div><div class="pill">OpenRouter (desenho)</div>
+    <p style="margin-top:18px">Robô Chaveiro · projeto aberto de pesquisa e educação ·
+      <a href="https://github.com/inematds/robo-chaveiro">inematds/robo-chaveiro</a> ·
+      <a href="https://inema.club">INEMA.CLUB</a></p>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var KEY='robo-chaveiro-theme';
+    var b=document.body, t=document.getElementById('themeToggle');
+    try{ if(localStorage.getItem(KEY)==='light'){ b.classList.add('light'); t.textContent='☀️'; } }catch(e){}
+    t.addEventListener('click',function(){
+      var light=b.classList.toggle('light');
+      t.textContent=light?'☀️':'🌙';
+      try{ localStorage.setItem(KEY, light?'light':'dark'); }catch(e){}
+    });
+  })();
+</script>
+</body>
+</html>

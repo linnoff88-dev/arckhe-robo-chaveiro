@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keychain Robot — a pocket-sized robot that talks with your child, with parents in control</title>
+<meta name="description" content="Open project: a 1.54&quot; ESP32-S3 board becomes a keychain that talks with children by voice. Its brain runs on a home computer or, away from home, through an AI service (OpenRouter, planned). Parents set its name, schedule, and limits from a phone. Today it’s a design; the board is on its way.">
+<meta property="og:title" content="Keychain Robot — a pocket-sized robot that talks">
+<meta property="og:description" content="Your child carries a pocket-sized robot that talks with them, and you decide when and what about.">
+<meta property="og:image" content="https://inematds.github.io/robo-chaveiro/guia/assets/banner-en.jpg">
+<link rel="alternate" hreflang="pt-BR" href="https://inematds.github.io/robo-chaveiro/guia/">
+<link rel="alternate" hreflang="en" href="https://inematds.github.io/robo-chaveiro/guia/en/">
+<link rel="alternate" hreflang="es" href="https://inematds.github.io/robo-chaveiro/guia/es/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0c10; --bg2:#14141b; --card:#16161e; --line:#272730;
+    --txt:#e9e9ee; --mut:#9a9aa6; --amb:#FACC15; --amb2:#f0c070; --sky:#38bdf8; --pro:#cbd5e1;
+    --ok:#7CE0C6; --warm:#F2B45C; --bad:#F0918A;
+    color-scheme:dark;
+  }
+  body.light{
+    --bg:#f6f7f9; --bg2:#eceef2; --card:#ffffff; --line:#e1e3ea;
+    --txt:#1a1a22; --mut:#5b5b68; --amb:#a16207; --amb2:#a16207; --sky:#0369a1; --pro:#b45309;
+    --ok:#0E6B55; --warm:#8F520A; --bad:#A83426;
+    color-scheme:light;
+  }
+  body.light .hero .glow{opacity:.5}
+  body.light pre{background:#0e0e14;color:#d6d6e0}
+  body.light pre .c{color:#8a8a98}
+  body.light pre .k{color:#f0c070}
+  body.light .btn{background:#FACC15}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.65 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:Sora,sans-serif;line-height:1.15;margin:0}
+  a{color:var(--amb);text-decoration:none}
+  code,pre{font-family:"JetBrains Mono",monospace}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 22px}
+  .mut{color:var(--mut)} .amb{color:var(--amb)}
+  .chip{display:inline-block;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--amb);font-weight:600;font-family:Sora}
+  nav{position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);background:rgba(12,12,16,.78);border-bottom:1px solid var(--line)}
+  body.light nav{background:rgba(246,247,249,.85)}
+  nav .wrap{display:flex;align-items:center;gap:22px;height:60px}
+  nav .brand{display:flex;align-items:center;gap:8px;font-family:Sora;font-weight:800;letter-spacing:-.02em;color:var(--amb)}
+  nav .brand .emoji{font-size:1.25rem}
+  nav .sep{color:var(--mut);opacity:.45}
+  nav .inema{color:var(--sky);font-weight:600;font-size:.88rem;font-family:Sora}
+  nav .inema:hover{filter:brightness(1.15)}
+  nav .pro{color:var(--pro);font-weight:600;font-size:.88rem;font-family:Sora}
+  nav .pro:hover{filter:brightness(1.15)}
+  nav .clubpro{display:inline-flex;align-items:center;gap:6px}
+  nav .links{margin-left:auto;display:flex;align-items:center;gap:20px;font-size:.92rem}
+  nav .links a.sec{color:var(--mut)} nav .links a.sec:hover{color:var(--txt)}
+  .lang{display:inline-flex;gap:2px;font-family:Sora;font-size:.78rem}
+  .lang a{color:var(--mut);padding:.2em .45em;border-radius:6px} .lang a.on{color:var(--amb);background:rgba(250,204,21,.12)}
+  .tgl{background:var(--bg2);border:1px solid var(--line);color:var(--txt);width:38px;height:38px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:1.05rem}
+  .tgl:hover{border-color:var(--amb)}
+  .btn{display:inline-block;background:var(--amb);color:#1a1206;font-weight:600;padding:.6em 1.05em;border-radius:10px;font-family:Sora}
+  .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+  @media(max-width:900px){nav .links a.sec{display:none}}
+  @media(max-width:520px){nav .wrap{gap:8px;padding:8px 14px;height:auto;flex-wrap:wrap} nav .links{gap:8px;margin-left:0;width:100%;justify-content:space-between} nav .btn{padding:.45em .7em;font-size:.82rem} .tgl{width:34px;height:34px}}
+  .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+  .hero .glow{position:absolute;inset:-40% -20% auto auto;width:70%;height:600px;background:radial-gradient(closest-side,rgba(250,204,21,.16),transparent 70%);pointer-events:none}
+  .hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding:74px 22px}
+  .hero h1{font-size:clamp(2.1rem,4.6vw,3.3rem);font-weight:800;letter-spacing:-.025em}
+  .hero p.lead{font-size:1.15rem;color:var(--mut);margin:1.1em 0 1.6em;max-width:44ch}
+  .hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+  .hero figure{margin:0;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 80px -30px #000}
+  .hero figure img{width:100%;height:auto;display:block}
+  .resumo{padding:38px 0 34px;border-bottom:1px solid var(--line)}
+  .resumo p{font-size:1.12rem;line-height:1.7;max-width:74ch;margin:.55em 0 0}
+  .resumo figure{margin:28px 0 0;border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+  .resumo figure img{width:100%;display:block}
+  @media(max-width:780px){.hero .wrap{grid-template-columns:1fr;padding:48px 22px}}
+  section{padding:62px 0;border-bottom:1px solid var(--line)}
+  section h2{font-size:clamp(1.5rem,3.4vw,2.1rem);font-weight:800;letter-spacing:-.02em}
+  section .sub{color:var(--mut);margin:.6em 0 2em;max-width:66ch}
+  .grid{display:grid;gap:16px}
+  .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:820px){.g3,.g4{grid-template-columns:1fr 1fr}}
+  @media(max-width:540px){.g2,.g3,.g4{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .card h3{font-size:1.05rem;margin-bottom:.4em}
+  .card p{color:var(--mut);font-size:.95rem;margin:0}
+  .card p+p{margin-top:.6em}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+  .flow span{background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:.45em .9em;font-size:.85rem;font-family:Sora;font-weight:600}
+  .techzone .flow span{background:var(--card)}
+  .flow .arr{color:var(--amb);border:none;background:none !important;padding:0 .1em}
+  pre{background:#0a0a0e;border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow:auto;font-size:.86rem;line-height:1.6;color:#d6d6e0}
+  pre .c{color:#6f6f7c} pre .k{color:var(--amb2)} pre .s{color:#9ece6a}
+  .step{display:grid;grid-template-columns:46px minmax(0,1fr);gap:16px;margin-bottom:26px}
+  .step>div,.card{min-width:0}
+  p code,li code,td code{overflow-wrap:anywhere;font-size:.88em}
+  .step .b{width:46px;height:46px;border-radius:12px;background:#FACC15;color:#1a1206;font-family:Sora;font-weight:800;font-size:1.25rem;display:flex;align-items:center;justify-content:center}
+  .step h3{font-size:1.12rem;margin-bottom:.3em}
+  .step p{color:var(--mut);margin:.2em 0 .7em}
+  .phase{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--line)}
+  .phase:last-child{border:none}
+  .phase .tag{flex:0 0 92px;font-family:Sora;font-weight:800;color:var(--amb)}
+  .phase .d strong{display:block;margin-bottom:.2em}
+  .phase .d span{color:var(--mut);font-size:.95rem}
+  .st{display:inline-block;font-family:Sora;font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:.2em .6em;border-radius:999px;border:1px solid currentColor;margin-bottom:.6em}
+  .st.ok{color:var(--ok)} .st.meio{color:var(--warm)} .st.papel{color:var(--mut)}
+  .tbl{width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+  table{border-collapse:collapse;width:100%;font-size:.93rem;min-width:520px}
+  th,td{text-align:left;padding:.7em .9em;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:Sora;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);background:var(--bg2)}
+  .techzone th{background:var(--card)}
+  tr:last-child td{border-bottom:none}
+  .big{font-family:Sora;font-weight:800;font-size:2rem;color:var(--amb);line-height:1}
+  .nota{border-left:3px solid var(--amb);padding:.8em 1em;background:var(--card);border-radius:0 12px 12px 0;color:var(--txt);max-width:74ch;margin-top:1.6em}
+  .techhead{background:var(--bg2);border-top:3px solid var(--amb);padding:58px 0 8px}
+  .techhead h2{font-family:Sora;font-size:clamp(1.5rem,3.4vw,2.1rem);font-weight:800;margin:.3em 0 0}
+  .techhead .sub{color:var(--mut);margin:.6em 0 1em;max-width:66ch}
+  .techzone{background:var(--bg2)}
+  footer{padding:46px 0;text-align:center;color:var(--mut);font-size:.9rem}
+  .pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:.3em .8em;font-size:.78rem;color:var(--mut);margin:4px}
+  .poderes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0 6px}
+  .poderes div{border:1px solid var(--amb);border-radius:12px;padding:10px 12px;background:rgba(250,204,21,.07)}
+  .poderes b{display:block;font-family:Sora;font-size:1.15rem;color:var(--amb);letter-spacing:-.01em}
+  .poderes span{font-size:.82rem;color:var(--mut);line-height:1.35}
+  @media (max-width:640px){.poderes{grid-template-columns:repeat(2,1fr)}}
+  .card figcaption{font-size:.85rem;color:var(--mut);margin-top:8px}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="brand" href="#top"><span class="emoji">🔑</span> Keychain Robot</a>
+  <span class="sep">|</span>
+  <span class="clubpro">
+    <a class="inema" href="https://inema.club" target="_blank" rel="noopener">INEMA.CLUB</a>
+    <span class="sep">-</span>
+    <a class="pro" href="https://inema.pro" target="_blank" rel="noopener">PRO</a>
+  </span>
+  <div class="links">
+    <a class="sec" href="#ideia">The idea</a>
+    <a class="sec" href="#hoje">Today</a>
+    <a class="sec" href="#cerebros">Brains</a>
+    <a class="sec" href="#pais">Parents</a>
+    <a class="sec" href="#corpos">Bodies</a>
+    <a class="sec" href="#tecnico">Kit (technical)</a>
+    <span class="lang"><a href="../">PT</a><a class="on" href="./">EN</a><a href="../es/">ES</a></span>
+    <button class="tgl" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">🌙</button>
+    <a class="btn" href="https://github.com/inematds/robo-chaveiro" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</div></nav>
+
+<header class="hero" id="top">
+  <div class="glow"></div>
+  <div class="wrap">
+    <div>
+      <span class="chip">Pocket robot · open project</span>
+      <h1>Your child carries a pocket-sized robot that talks with them, and <span class="amb">you decide</span> when and what about</h1>
+      <p class="lead">You want your child to talk with an AI without handing them a phone, and without losing control over what they hear. The <strong>Keychain Robot</strong> is a R$132 board (shipping not included) with a screen and voice, about the size of a keychain, that responds aloud. The design lets parents choose its name, voice, schedule, and daily time limit. Today it’s only a project: the board hasn’t arrived yet.</p>
+      <div class="cta">
+        <a class="btn" href="#video">Understand it in 2 minutes</a>
+        <a class="btn ghost" href="https://github.com/inematds/robo-chaveiro" target="_blank" rel="noopener">View on GitHub</a>
+      </div>
+    </div>
+    <figure><img src="../assets/banner-en.jpg" alt="Banner: Keychain Robot. Talks with the child by voice, with parents in control"><figcaption style="padding:10px 14px;font-size:.85rem;color:var(--mut);background:var(--card)">Illustrative artwork. The board hasn’t arrived yet; nothing has been flashed onto it.</figcaption></figure>
+  </div>
+</header>
+
+<section id="resumo" class="resumo"><div class="wrap">
+  <span class="chip">In brief</span>
+  <p>This is an open project to turn a small board with a 1.54" screen into a kind of pocket pet that talks by voice: the child holds a button, speaks, and it replies aloud, showing a big-eyed face on the screen. It “thinks” in one of three ways: through a home computer, directly through an AI service on the internet (OpenRouter), or through the home computer relaying to that service. Parents will configure everything from a phone. Today, the design and a home server already working in a sibling project exist; the board and its firmware do not yet.</p>
+  <figure><img src="../assets/banner-grade-en.jpg" alt="Banner with six cards: voice conversation, home server or API, battery warning, parent dashboard, animal bodies, open project" loading="lazy"><figcaption style="padding:10px 14px;font-size:.85rem;color:var(--mut);background:var(--card)">Illustrative artwork: the little metal figure is decoration. The real keychain is the small green square board with a face screen, shown in the image above.</figcaption></figure>
+</div></section>
+
+<section id="video"><div class="wrap">
+  <span class="chip">Video</span>
+  <h2>Understand it in 2 minutes</h2>
+  <p class="sub">The R$ 132 body, where the AI lives and what parents will be able to decide from their phone.</p>
+  <div style="aspect-ratio:16/9;border-radius:14px;overflow:hidden;border:1px solid var(--line)"><iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/735cjrp4KiM" title="Video: Keychain Robot" style="width:100%;height:100%;border:0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+  <p class="mut" style="margin-top:12px"><a href="https://www.youtube.com/watch?v=735cjrp4KiM" target="_blank" rel="noopener">▶ Watch on YouTube</a> · <a href="https://youtube.com/shorts/sbQqWAy1ByE" target="_blank" rel="noopener">Vertical version (phone)</a></p>
+</div></section>
+
+<section id="ideia"><div class="wrap">
+  <span class="chip">The idea</span>
+  <h2>A face in your pocket, with the brain somewhere else</h2>
+  <p class="sub">A keychain-sized board can’t understand speech or think up a response on its own; that takes large models. So it’s just the body: it listens, shows a face, and speaks. The thinking happens elsewhere.</p>
+  <div class="grid g3">
+    <div class="card"><h3>🔑 The body, in your pocket</h3><p>A SpotPear board with a 1.54" screen, microphone, speaker, two buttons, and a case with a hole for hanging. The child holds the button, speaks for up to 15 seconds, and releases it. There’s no camera.</p></div>
+    <div class="card"><h3>🧠 The brain, at home or online</h3><p>At home, a program on the computer turns speech into text, asks an AI for a response (Claude, paid by subscription, not per question), and generates the voice right there. Away from home, the design includes an online AI service (OpenRouter), which hasn’t been authorized or tested yet.</p></div>
+    <div class="card"><h3>🔋 Warns before shutting down</h3><p>It was designed to run on battery power (whether the keychain version includes a battery, and its capacity, have not yet been verified). The design: as the battery runs low, it shows sleepy eyes, then says “please plug me in,” and finally says goodbye and goes to sleep. The phrases are stored on the device, so the warning works without internet.</p></div>
+  </div>
+  <p class="nota"><strong>Safety by design:</strong> use a key ring or carabiner, never a neck cord without a breakaway clasp. No small parts that can come loose. The project rule is that the robot won’t ask for a child’s full name, address, or school. On the home server, the AI has no tools: it only writes text and can’t do anything on the computer.</p>
+</div></section>
+
+<section id="hoje"><div class="wrap">
+  <span class="chip">What exists today</span>
+  <h2>What’s ready and what’s still just a design</h2>
+  <p class="sub">Status as of 11/15/2026. No promises: only what has been done.</p>
+  <div class="grid g3">
+    <div class="card"><span class="st ok">✓ Ready (in the sibling project)</span><h3>The home server</h3><p>The home brain is the one from <a href="https://inematds.github.io/robo-cores3-lite/guia/" target="_blank" rel="noopener">Robô CoreS3 Lite</a>, already tested with recordings: 6.8 to 7.6 seconds measured until the first sound of the response, with the models loaded. The keychain will use the same server.</p></div>
+    <div class="card"><span class="st meio">◐ Purchased, on the way</span><h3>The board</h3><p>SpotPear ESP32-S3 1.54", probably the “muma” model, purchased for R$132.14 on 11/15/2026. The exact model, battery, and audio pins will only be confirmed once it’s in hand.</p></div>
+    <div class="card"><span class="st papel">○ Design only</span><h3>Board firmware, dashboard, and battery warning</h3><p>The board firmware, parent dashboard, battery warning, and online connection are designed, with a completion criterion for each. None of them has been written yet.</p></div>
+  </div>
+  <p class="nota"><strong>No unexpected cloud service:</strong> the board ships with firmware that sends voice to a third-party service (XiaoZhi). It won’t be activated: children’s voices won’t be sent outside the home without a decision from the parents. The factory firmware can be restored later using files from SpotPear itself.</p>
+</div></section>
+
+<section id="cerebros"><div class="wrap">
+  <span class="chip">Three brains</span>
+  <h2>At home, directly online, or both together</h2>
+  <p class="sub">The same keychain can use any of these. Only the home server exists today; the other two will only be added with the project owner’s authorization to use the paid service.</p>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>Through the home computer</th><th>Directly online (OpenRouter)</th><th>Home computer relays to the internet</th></tr></thead>
+    <tbody>
+      <tr><td>Where it works</td><td>On home Wi-Fi, with the computer turned on</td><td>On any Wi-Fi, including a phone’s hotspot</td><td>Wherever the keychain can reach the computer</td></tr>
+      <tr><td>Response time</td><td>6.8 to 7.6 seconds until the first sound, measured in the sibling project</td><td>Not measured</td><td>Not measured</td></tr>
+      <tr><td>Cost</td><td>Only the Claude subscription and a computer left on</td><td>Pay per use, with a daily cap</td><td>Pay per use</td></tr>
+      <tr><td>Paid service password stored on the keychain</td><td>None</td><td>Its own, with a daily spending cap; if the keychain is lost, just deactivate it</td><td>None</td></tr>
+      <tr><td>Voice</td><td>Generated on the home computer</td><td>The service’s voice</td><td>The home voice or the service’s voice</td></tr>
+      <tr><td>Status</td><td>Exists (sibling project)</td><td colspan="2">Design only; no requests have been made</td></tr>
+    </tbody>
+  </table></div>
+  <p class="nota">According to the <a href="https://openrouter.ai/docs/guides/overview/multimodal/audio" target="_blank" rel="noopener">OpenRouter documentation</a>, a full turn fits in one request: the recording is sent, and the response comes back in audio and text chunks, which the keychain plays as they arrive. Which voice models are available there today and how much they cost haven’t been checked yet.</p>
+</div></section>
+
+<section id="pais"><div class="wrap">
+  <span class="chip">Parents in control</span>
+  <h2>You’ll configure it from your phone, and your child will know you can see</h2>
+  <p class="sub"><span class="st papel">○ Design only</span> Two-screen design: initial setup on the keychain itself, and a family dashboard on the home computer that opens on a phone.</p>
+  <div class="grid g3">
+    <div class="card"><h3>🏷️ Give it a name and personality</h3><p>Keychain name, child’s nickname (never their full name), age range, personality (playful, calm, curious, teacher), voice, eye color, and maximum volume.</p></div>
+    <div class="card"><h3>⏰ Set limits</h3><p>Allowed hours (outside them: “it’s time to rest”), minutes per day, a “pause now” button, topics parents want to block, and a daily spending cap when using OpenRouter.</p></div>
+    <div class="card"><h3>👀 Keep track</h3><p>Text-only history, with timestamps, and a daily summary. Retained for 0, 1, 7, or 30 days, then deleted automatically. Audio is off by default. Also shows battery level and last contact.</p></div>
+  </div>
+  <p class="nota"><strong>No hidden monitoring:</strong> the keychain will tell the child that their parents can see what they talk about. <strong>No location tracking:</strong> the board has no GPS, and the dashboard won’t try to find where the child is. Data stays on the family computer; when using OpenRouter, the text also passes through that service, and the dashboard will make that clear.</p>
+</div></section>
+
+<section id="corpos"><div class="wrap">
+  <span class="chip">An idea for later</span>
+  <h2>Animal and character bodies, with the keychain as the face</h2>
+  <p class="sub">The keychain fits into a body, and the screen becomes the character’s face. These images are design concepts generated with AI (Codex), not finished products. This is for a future phase.</p>
+  <div class="grid g4">
+    <figure class="card" style="margin:0;padding:10px"><img src="../assets/corpos/01-capi-bolso.jpg" alt="Plush capybara with the keychain as its face" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Pocket Capi</strong> · plush capybara</figcaption></figure>
+    <figure class="card" style="margin:0;padding:10px"><img src="../assets/corpos/02-tatu-casca.jpg" alt="Armadillo with segmented shell and the keychain as its face" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Shell Armadillo</strong> · segmented armadillo</figcaption></figure>
+    <figure class="card" style="margin:0;padding:10px"><img src="../assets/corpos/03-perereca-pingo.jpg" alt="Tree frog made of silicone with the keychain as its face" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Pingo Tree Frog</strong> · silicone</figcaption></figure>
+    <figure class="card" style="margin:0;padding:10px"><img src="../assets/corpos/04-arara-asa.jpg" alt="Crocheted macaw with the keychain as its face" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Wing Macaw</strong> · crochet</figcaption></figure>
+    <figure class="card" style="margin:0;padding:10px"><img src="../assets/corpos/05-nuvim.jpg" alt="Soft plush cloud with the keychain as its face" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Little Cloud</strong> · soft cloud, ages 3–6</figcaption></figure>
+    <figure class="card" style="margin:0;padding:10px"><img src="../assets/corpos/06-trilho.jpg" alt="Hooded little figure with the keychain as its face" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Trilho</strong> · hooded figure</figcaption></figure>
+    <figure class="card" style="margin:0;padding:10px"><img src="../assets/corpos/07-orbe-robo.jpg" alt="Small tabletop robot, 3D-printed, with the keychain as its face" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Orb Robot</strong> · 3D-printed cradle</figcaption></figure>
+    <figure class="card" style="margin:0;padding:10px"><img src="../assets/corpos/08-ipe-miudo.jpg" alt="Small tree made of wood and felt with the keychain as its face" loading="lazy" style="width:100%;border-radius:10px"><figcaption><strong>Little Ipê</strong> · wood and felt</figcaption></figure>
+  </div>
+  <p class="nota">Shared rules: no magnets, plastic eyes, or parts that can come loose; speaker and microphone openings must stay clear; buttons and charging port must remain accessible; and the keychain must come out of the body for charging. The concepts, research, and links are in <a href="https://github.com/inematds/robo-chaveiro/blob/main/ideias/corpos/PROPOSTAS.md" target="_blank" rel="noopener">ideias/corpos/PROPOSTAS.md</a> (in Portuguese).</p>
+</div></section>
+
+<div id="tecnico" class="techhead"><div class="wrap">
+  <span class="chip">Technical section</span>
+  <h2>The kit: <span class="amb">for anyone who wants to build one</span></h2>
+  <p class="sub">From here on, this is the technical section: the board, protocol, commands, and phases. You <strong>don’t need</strong> this part to understand what came before.</p>
+</div></div>
+
+<div class="techzone">
+
+<section id="oque"><div class="wrap">
+  <span class="chip">What it is</span>
+  <h2>The board, the reused server, and the documents</h2>
+  <p class="sub">Everything is in the repository, in Portuguese: the definition, phased plan with completion criteria, and body concepts.</p>
+  <div class="grid g3">
+    <div class="card"><h3>🟩 SpotPear ESP32-S3 1.54" (probably “muma”)</h3><p>ESP32-S3 with 2.4 GHz Wi-Fi, 16 MB flash, and 8 MB PSRAM; 240 × 240 display (ST7789), touch only on the “Touch” version; microphone and speaker; power and BOOT buttons; USB-C charging. No camera. Specs are from SpotPear’s product sheet and wiki, not yet checked against the actual board.</p></div>
+    <div class="card"><h3>🖥️ Server from the sibling project</h3><p><a href="https://github.com/inematds/robo-cores3-lite" target="_blank" rel="noopener">robo-cores3-lite</a>, port 8770, used as is, with the <code>X-Robo-Id: chaveiro-1</code> header. This project does not copy its code.</p></div>
+    <div class="card"><h3>📄 Full design</h3><p><a href="https://github.com/inematds/robo-chaveiro/blob/main/DEFINICAO.md" target="_blank" rel="noopener">DEFINICAO.md</a> (in Portuguese) covers the board (section 2), the three brains (4), away from home (5), battery (7), children (9), parent dashboard (13), and bodies (14).</p></div>
+  </div>
+</div></section>
+
+<section id="fluxo"><div class="wrap">
+  <span class="chip">How it works</span>
+  <h2>One conversation turn through the home server</h2>
+  <p class="sub">Half-duplex conversation: it either listens or speaks. Same as the sibling project, without the photo.</p>
+  <div class="flow">
+    <span>Hold BOOT</span><span class="arr">→</span>
+    <span>/v1/aquecer</span><span class="arr">→</span>
+    <span>Record up to 15 s</span><span class="arr">→</span>
+    <span>/v1/conversa</span><span class="arr">→</span>
+    <span>Whisper</span><span class="arr">→</span>
+    <span>Claude (claude -p), no tools</span><span class="arr">→</span>
+    <span>Chatterbox</span><span class="arr">→</span>
+    <span>Play audio and show the face</span>
+  </div>
+  <p class="nota">Face states: ready, listening, thinking, speaking; on error, show an error face for 2 seconds and return to ready without restarting. With OpenRouter, the turn becomes an HTTPS request with the recording, and the response arrives in audio chunks (streaming).</p>
+</div></section>
+
+<section id="pre"><div class="wrap">
+  <span class="chip">Prerequisites</span>
+  <h2>What you need</h2>
+  <p class="sub">For the home brain, the same prerequisites as the sibling project (Linux with an NVIDIA graphics card, inemavox, Claude subscription). They’re explained in the <a href="https://inematds.github.io/robo-cores3-lite/guia/#pre" target="_blank" rel="noopener">Robô CoreS3 Lite guide</a>.</p>
+  <div class="grid g2">
+    <div class="card"><h3>The board</h3><p>SpotPear ESP32-S3 1.54" with a case. The first time, power it on without configuring Wi-Fi for the factory firmware.</p></div>
+    <div class="card"><h3>arduino-cli</h3><p>Arduino’s command-line tool, with the <code>esp32:esp32</code> package. The board to select in the compiler will be determined once the board is in hand.</p><pre><span class="k">arduino-cli</span> version</pre></div>
+  </div>
+</div></section>
+
+<section id="guia"><div class="wrap">
+  <span class="chip">Getting started · step by step</span>
+  <h2>What you can do today</h2>
+  <p class="sub">Steps 1 to 3 work today, without the board. Step 4 is the first step that needs it. The board firmware doesn’t exist yet.</p>
+
+  <div class="step"><div class="b">1</div><div>
+    <h3>Download both projects</h3>
+    <p>This one, with the design, and its sibling, with the server.</p>
+<pre><span class="k">git clone</span> <span class="s">https://github.com/inematds/robo-chaveiro</span>
+<span class="k">git clone</span> <span class="s">https://github.com/inematds/robo-cores3-lite</span></pre>
+  </div></div>
+
+  <div class="step"><div class="b">2</div><div>
+    <h3>Start the home server</h3>
+    <p>Create the configuration: replace <code>ROBO_TOKEN</code> with a long string and point <code>VOZ_REF</code> to a short WAV file with the voice the robot will imitate. Prerequisites (inemavox, Python environment, Claude Code) are in the <a href="https://inematds.github.io/robo-cores3-lite/guia/#pre" target="_blank" rel="noopener">sibling project guide</a>. Then start the server on port 8770.</p>
+<pre><span class="k">cd</span> robo-cores3-lite
+<span class="k">cp</span> servidor/env.exemplo servidor/.env
+<span class="k">nano</span> servidor/.env   <span class="c"># ROBO_TOKEN and VOZ_REF</span>
+<span class="k">python3</span> servidor/servidor.py</pre>
+  </div></div>
+
+  <div class="step"><div class="b">3</div><div>
+    <h3>Test the brain with a recording</h3>
+    <p>In another terminal, in the same folder as in step 1, send the test recording. It’s the same request the keychain will make.</p>
+<pre><span class="k">cd</span> robo-cores3-lite
+<span class="k">python3</span> servidor/testar.py servidor/teste/pergunta.wav</pre>
+  </div></div>
+
+  <div class="step"><div class="b">4</div><div>
+    <h3>When the board arrives: check whether it appears</h3>
+    <p>Connect it with a USB-C cable, without activating the cloud factory firmware. A new port should appear.</p>
+<pre><span class="k">arduino-cli</span> board list</pre>
+  </div></div>
+</div></section>
+
+<section id="roadmap"><div class="wrap">
+  <span class="chip">Roadmap</span>
+  <h2>Phases, each with a completion criterion</h2>
+  <p class="sub">The full plan, with a command or measurement to check each criterion, is in <a href="https://github.com/inematds/robo-chaveiro/blob/main/PLANO.md" target="_blank" rel="noopener">PLANO.md</a> (in Portuguese).</p>
+  <div class="phase"><div class="tag">F0</div><div class="d"><strong>The board arrives and powers on</strong><span>In progress: purchased on 11/15/2026, still on the way.</span></div></div>
+  <div class="phase"><div class="tag">F1</div><div class="d"><strong>Records and sends to the server</strong><span>Find the audio and battery pins in the schematic; hold BOOT to speak.</span></div></div>
+  <div class="phase"><div class="tag">F2</div><div class="d"><strong>Plays the response</strong><span>Five questions in a row, error face without restarting, measured battery life.</span></div></div>
+  <div class="phase"><div class="tag">F2b</div><div class="d"><strong>Battery warning</strong><span>Three levels calibrated to measured battery discharge; works without internet.</span></div></div>
+  <div class="phase"><div class="tag">F2c</div><div class="d"><strong>Setup and parent dashboard</strong><span>Name, schedule, minutes per day, pause, text history. The dashboard can start before the board arrives.</span></div></div>
+  <div class="phase"><div class="tag">F3</div><div class="d"><strong>A real keychain</strong><span>Key ring, case, child persona tested with 10 questions.</span></div></div>
+  <div class="phase"><div class="tag">F3b</div><div class="d"><strong>Online brain (OpenRouter)</strong><span>Only after authorization for the service and purpose.</span></div></div>
+  <div class="phase"><div class="tag">F4</div><div class="d"><strong>Optional features</strong><span>Animal bodies, automatic brain switching, waiting phrases, wake word.</span></div></div>
+</div></section>
+
+</div><!-- /techzone -->
+
+<footer>
+  <div class="wrap">
+    <div class="pill">SpotPear ESP32-S3 1.54"</div><div class="pill">ESP32-S3 · Arduino</div><div class="pill">robo-cores3-lite server</div><div class="pill">claude -p (subscription)</div><div class="pill">OpenRouter (planned)</div>
+    <p style="margin-top:18px">Keychain Robot · open research and education project ·
+      <a href="https://github.com/inematds/robo-chaveiro">inematds/robo-chaveiro</a> ·
+      <a href="https://inema.club">INEMA.CLUB</a></p>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var KEY='robo-chaveiro-theme';
+    var b=document.body, t=document.getElementById('themeToggle');
+    try{ if(localStorage.getItem(KEY)==='light'){ b.classList.add('light'); t.textContent='☀️'; } }catch(e){}
+    t.addEventListener('click',function(){
+      var light=b.classList.toggle('light');
+      t.textContent=light?'☀️':'🌙';
+      try{ localStorage.setItem(KEY, light?'light':'dark'); }catch(e){}
+    });
+  })();
+</script>
+</body>
+</html>
